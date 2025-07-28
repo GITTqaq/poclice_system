@@ -1,0 +1,31 @@
+{% extends 'index.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>发件箱</h2>
+        <a href="{{ url_for('send_message') }}" class="btn btn-primary">
+            <i class="fa fa-paper-plane"></i> 发送消息
+        </a>
+    </div>
+
+    {% if messages %}
+    <div class="card">
+        <div class="list-group list-group-flush">
+            {% for msg in messages %}
+            <a href="{{ url_for('view_message', message_id=msg.id) }}" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">{{ msg.title }}</h5>
+                    <small>{{ msg.create_time.strftime('%Y-%m-%d %H:%M') }}</small>
+                </div>
+                <p class="mb-1">{{ msg.content|truncate(50) }}</p>
+                <small>发送给: {{ msg.receiver.name }} ({{ msg.receiver.department }})</small>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">暂无发送的消息</div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统配置 - 公安内网系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-6">
+        <h1 class="text-2xl font-bold mb-6">系统配置</h1>
+
+        <!-- 提示消息 -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="bg-{{ 'green-100 text-green-700' if category == 'success' else 'red-100 text-red-700' }} p-4 rounded-lg mb-6">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- 系统配置表单 -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">系统参数设置</h2>
+            <form method="POST" class="space-y-4">
+                {{ form.hidden_tag() }}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">日志级别</label>
+                    {{ form.log_level(class="mt-1 block w-full border-gray-300 rounded-md shadow-sm") }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">最大上传文件大小（MB）</label>
+                    {{ form.max_upload_size(class="mt-1 block w-full border-gray-300 rounded-md shadow-sm") }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">默认时间范围</label>
+                    {{ form.default_time_range(class="mt-1 block w-full border-gray-300 rounded-md shadow-sm") }}
+                </div>
+                {{ form.submit(class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600") }}
+            </form>
+        </div>
+
+        <!-- 操作日志 -->
+        <div class="bg-white rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4 p-4">操作日志</h2>
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="text-center">序号</th>
+                        <th class="text-center">操作用户</th>
+                        <th class="text-center">操作内容</th>
+                        <th class="text-center">时间</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for log in logs %}
+                        <tr class="{% if loop.index0 % 2 == 0 %} bg-gray-50 {% else %} bg-white {% endif %}">
+                            <td class="text-center py-2 px-4">{{ loop.index }}</td>
+                            <td class="text-center py-2">{{ log.user.username if log.user else '系统' }}</td>
+                            <td class="text-center py-2">{{ log.action }}</td>
+                            <td class="text-center py-2">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <a href="{{ url_for('index') }}" class="mt-6 inline-block text-blue-500 hover:underline">返回首页</a>
+    </div>
+</body>
+</html>

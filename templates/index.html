@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公安内网综合信息系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0A3D62',
+                        secondary: '#3C6382',
+                        accent: '#C0392B',
+                        neutral: '#F5F6FA',
+                        'neutral-dark': '#2C3E50',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .sidebar-item {
+                @apply flex items-center gap-3 px-4 py-3 text-gray-200 hover:bg-secondary hover:text-white rounded transition-all duration-200;
+            }
+            .sidebar-item.active {
+                @apply bg-secondary border-l-4 border-white;
+            }
+            .card-shadow {
+                @apply shadow-md hover:shadow-lg transition-shadow duration-300;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="flex h-screen overflow-hidden">
+        <!-- 侧边栏导航 -->
+        <aside class="bg-primary w-64 flex-shrink-0 hidden md:block transition-all duration-300 ease-in-out" id="sidebar">
+            <div class="flex items-center justify-center h-16 border-b border-secondary">
+                <div class="flex items-center gap-2">
+                    <i class="fa fa-shield text-white text-2xl"></i>
+                    <h1 class="text-white text-xl font-bold">公安内网系统</h1>
+                </div>
+            </div>
+
+            <nav class="py-4">
+                <p class="text-gray-400 px-4 mb-2 text-xs uppercase font-semibold">主要功能</p>
+
+                <a href="#" class="sidebar-item active">
+                    <i class="fa fa-home w-5 text-center"></i>
+                    <span>首页</span>
+                </a>
+
+                <a href="#" class="sidebar-item">
+                    <i class="fa fa-id-card w-5 text-center"></i>
+                    <span>人员管理</span>
+                </a>
+
+                <a href="{{ url_for('manage_cases') }}" class="sidebar-item">
+                    <i class="fa fa-folder-open w-5 text-center"></i>
+                    <span>案件管理</span>
+                </a>
+<!--                <a href="{{ url_for('manage_cases') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">案件管理</a>-->
+                <a href="{{ url_for('analytics') }}" class="sidebar-item">
+                    <i class="fa fa-line-chart w-5 text-center"></i>
+                    <span>数据分析</span>
+                </a>
+                <a href="{{ url_for('manage_documents') }}" class="sidebar-item">
+                    <i class="fa fa-file-text w-5 text-center"></i>
+                    <span>文书管理</span>
+                </a>
+<!--                {% if current_user.role == 'admin' %}-->
+<!--                <a href="{{ url_for('manage_users') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">用户管理</a>-->
+<!--                {% endif %}-->
+<!--                <p class="text-gray-400 px-4 mb-2 mt-6 text-xs uppercase font-semibold">系统设置</p>-->
+                {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('manage_users') }}" class="sidebar-item">
+                <i class="fa fa-users w-5 text-center"></i>
+                <span>用户管理</span>
+              </a>
+               {% endif %}
+                <a href="{{ url_for('system_config')}}" class="sidebar-item">
+                    <i class="fa fa-cog w-5 text-center"></i>
+                    <span>系统配置</span>
+                </a>
+
+                <a href="#" class="sidebar-item">
+                    <i class="fa fa-user-circle w-5 text-center"></i>
+                    <span>用户权限</span>
+                </a>
+
+                <a href="{{ url_for('manage_notices')}}" class="sidebar-item">
+                    <i class="fa fa-bell w-5 text-center"></i>
+                    <span>消息通知</span>
+                    <span class="ml-auto bg-accent text-white text-xs rounded-full h-5 w-5 flex items-center justify-center" id="notificationCount">0</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- 主内容区 -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+<!--            &lt;!&ndash; 顶部导航栏 &ndash;&gt;-->
+<!--            <header class="bg-white h-16 shadow-sm flex items-center justify-between px-6">-->
+<!--                <div class="flex items-center gap-4">-->
+<!--                    <button class="md:hidden text-gray-600" id="menuToggle">-->
+<!--                        <i class="fa fa-bars text-xl"></i>-->
+<!--                    </button>-->
+<!--                    <div class="relative">-->
+<!--                        <input type="text" placeholder="搜索..." class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 w-64">-->
+<!--                        <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>-->
+<!--                    </div>-->
+<!--                </div>-->
+
+<!--                <div class="flex items-center gap-6">-->
+<!--                    <button class="text-gray-600 relative">-->
+<!--                        <i class="fa fa-bell text-xl"></i>-->
+<!--                        <span class="absolute -top-1 -right-1 bg-accent text-white text-xs rounded-full h-4 w-4 flex items-center justify-center" id="headerNotificationCount">0</span>-->
+<!--                    </button>-->
+
+<!--                    <div class="flex items-center gap-3">-->
+<!--                        <img src="https://picsum.photos/id/1005/40/40" alt="用户头像" class="w-8 h-8 rounded-full object-cover border-2 border-primary">-->
+<!--                        <div class="hidden md:block">-->
+<!--                            <p class="text-sm font-medium text-gray-800" id="userName">加载中...</p>-->
+<!--                            <p class="text-xs text-gray-500" id="userDepartment">加载中...</p>-->
+<!--                        </div>-->
+<!--                        <a href="/logout" class="text-gray-500 hover:text-accent">-->
+<!--                            <i class="fa fa-sign-out"></i>-->
+<!--                        </a>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </header>-->
+
+            <!-- 顶部导航栏 -->
+<!-- 顶部导航栏 -->
+<header class="bg-white h-16 shadow-sm flex items-center justify-between px-6">
+    <div class="flex items-center gap-4">
+        <button class="md:hidden text-gray-600" id="menuToggle">
+            <i class="fa fa-bars text-xl"></i>
+        </button>
+        <div class="relative">
+            <input type="text" placeholder="搜索..." class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 w-64">
+            <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        </div>
+    </div>
+
+    <div class="flex items-center gap-6">
+        <!-- 优化后的消息通知入口 -->
+        <div class="relative">
+            <!-- 消息按钮（点击触发下拉） -->
+            <button class="text-gray-600 relative" id="messageButton">
+                <i class="fa fa-envelope text-xl"></i>
+                <span class="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full h-4 w-4 flex items-center justify-center" id="unreadBadge" style="display: none;">0</span>
+            </button>
+
+            <!-- 消息下拉菜单（默认隐藏） -->
+            <div class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-2 z-50 hidden" id="messageDropdown">
+                <div class="px-4 py-2 border-b border-gray-100 flex justify-between items-center">
+                    <p class="font-medium text-gray-800">消息中心</p>
+                    <button id="closeMessageDropdown" class="text-gray-400 hover:text-gray-600">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+                <a href="{{ url_for('message_inbox') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <i class="fa fa-inbox mr-2"></i>收件箱
+                </a>
+                <a href="{{ url_for('message_outbox') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <i class="fa fa-paper-plane mr-2"></i>发件箱
+                </a>
+                <a href="{{ url_for('send_message') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <i class="fa fa-plus mr-2"></i>发送消息
+                </a>
+            </div>
+        </div>
+
+        <!-- 原有通知按钮 -->
+        <button class="text-gray-600 relative">
+            <i class="fa fa-bell text-xl"></i>
+            <span class="absolute -top-1 -right-1 bg-accent text-white text-xs rounded-full h-4 w-4 flex items-center justify-center" id="headerNotificationCount">0</span>
+        </button>
+
+        <!-- 用户信息区域 -->
+        <div class="flex items-center gap-3">
+            <img src="https://picsum.photos/id/1005/40/40" alt="用户头像" class="w-8 h-8 rounded-full object-cover border-2 border-primary">
+            <div class="hidden md:block">
+                <p class="text-sm font-medium text-gray-800" id="userName">{{ current_user.name if current_user.is_authenticated else '加载中...' }}</p>
+                <p class="text-xs text-gray-500" id="userDepartment">{{ current_user.department if current_user.is_authenticated else '加载中...' }}</p>
+            </div>
+            <a href="{{ url_for('logout') }}" class="text-gray-500 hover:text-accent">
+                <i class="fa fa-sign-out"></i>
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- 消息菜单交互脚本 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 获取元素
+    const messageButton = document.getElementById('messageButton');
+    const messageDropdown = document.getElementById('messageDropdown');
+    const closeButton = document.getElementById('closeMessageDropdown');
+    const unreadBadge = document.getElementById('unreadBadge');
+
+    // 点击消息按钮切换下拉菜单显示状态
+    messageButton.addEventListener('click', function(e) {
+        e.stopPropagation(); // 防止事件冒泡
+        messageDropdown.classList.toggle('hidden');
+    });
+
+    // 点击关闭按钮隐藏下拉菜单
+    closeButton.addEventListener('click', function() {
+        messageDropdown.classList.add('hidden');
+    });
+
+    // 点击页面其他区域隐藏下拉菜单
+    document.addEventListener('click', function() {
+        messageDropdown.classList.add('hidden');
+    });
+
+    // 阻止下拉菜单内部点击触发页面点击事件
+    messageDropdown.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+
+    // 获取未读消息数量
+    {% if current_user.is_authenticated %}
+    fetch('{{ url_for('unread_count') }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.count > 0) {
+                unreadBadge.textContent = data.count;
+                unreadBadge.style.display = 'flex';
+            }
+        })
+        .catch(error => console.error('获取未读消息失败:', error));
+    {% endif %}
+
+    // 更新用户信息
+    {% if current_user.is_authenticated %}
+    document.getElementById('userName').textContent = '{{ current_user.name }}';
+    document.getElementById('userDepartment').textContent = '{{ current_user.department }}';
+    {% endif %}
+});
+</script>
+
+
+<!-- 未读消息计数脚本 -->
+<script>
+// 页面加载后获取未读消息数
+document.addEventListener('DOMContentLoaded', function() {
+    // 仅当用户已登录时获取消息
+    {% if current_user.is_authenticated %}
+    fetch('{{ url_for('unread_count') }}')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('unreadBadge');
+            if (data.count > 0) {
+                badge.textContent = data.count;
+                badge.style.display = 'flex'; // 显示未读计数
+            }
+        })
+        .catch(error => console.error('获取未读消息失败:', error));
+    {% endif %}
+
+    // 同时更新用户信息显示（优化原有功能）
+    {% if current_user.is_authenticated %}
+    document.getElementById('userName').textContent = '{{ current_user.name }}';
+    document.getElementById('userDepartment').textContent = '{{ current_user.department }}';
+    {% endif %}
+});
+</script>
+
+            <!-- 页面内容滚动区域 -->
+            <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+                <div class="mb-6">
+                    <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gray-800">公安内网综合平台</h2>
+                    <p class="text-gray-500 mt-1">欢迎使用公安内网系统，请选择所需功能进行操作</p>
+                </div>
+
+                <!-- 数据统计卡片 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">今日警情</p>
+                                <h3 class="text-3xl font-bold mt-2 text-primary" id="todayIncidents">0</h3>
+                                <p class="text-green-500 text-sm mt-2"><i class="fa fa-arrow-up"></i> 较昨日 +3</p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-lg">
+                                <i class="fa fa-ambulance text-primary text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">在办案件</p>
+                                <h3 class="text-3xl font-bold mt-2 text-primary" id="handlingCases">0</h3>
+                                <p class="text-red-500 text-sm mt-2"><i class="fa fa-arrow-up"></i> 较上周 +2</p>
+                            </div>
+                            <div class="bg-purple-100 p-3 rounded-lg">
+                                <i class="fa fa-gavel text-purple-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">今日出勤</p>
+                                <h3 class="text-3xl font-bold mt-2 text-primary" id="onDuty">0</h3>
+                                <p class="text-green-500 text-sm mt-2"><i class="fa fa-arrow-down"></i> 较昨日 -5</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-lg">
+                                <i class="fa fa-users text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">待处理事项</p>
+                                <h3 class="text-3xl font-bold mt-2 text-primary" id="pendingTasks">0</h3>
+                                <p class="text-yellow-500 text-sm mt-2"><i class="fa fa-exclamation-circle"></i> 需要及时处理</p>
+                            </div>
+                            <div class="bg-yellow-100 p-3 rounded-lg">
+                                <i class="fa fa-tasks text-yellow-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图表和快捷功能区 -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- 警情趋势图表 -->
+                    <div class="bg-white rounded-xl p-6 lg:col-span-2 card-shadow">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-gray-800">近7日警情趋势</h3>
+                            <div class="flex gap-2">
+                                <button class="px-3 py-1 text-sm bg-primary/10 text-primary rounded-md">周</button>
+                                <button class="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-md">月</button>
+                                <button class="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-md">年</button>
+                            </div>
+                        </div>
+                        <div class="h-64">
+                            <canvas id="incidentChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- 快捷功能入口 -->
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="font-bold text-gray-800 mb-6">快捷功能</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <a href="#" class="flex flex-col items-center justify-center p-4 border border-gray-100 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors">
+                                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-2">
+                                    <i class="fa fa-plus text-primary text-xl"></i>
+                                </div>
+                                <span class="text-sm text-gray-700">新增案件</span>
+                            </a>
+
+                            <a href="#" class="flex flex-col items-center justify-center p-4 border border-gray-100 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors">
+                                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-2">
+                                    <i class="fa fa-search text-green-600 text-xl"></i>
+                                </div>
+                                <span class="text-sm text-gray-700">信息查询</span>
+                            </a>
+
+                            <a href="#" class="flex flex-col items-center justify-center p-4 border border-gray-100 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors">
+                                <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                                    <i class="fa fa-file-text text-purple-600 text-xl"></i>
+                                </div>
+                                <span class="text-sm text-gray-700">文书制作</span>
+                            </a>
+
+                            <a href="#" class="flex flex-col items-center justify-center p-4 border border-gray-100 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors">
+                                <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center mb-2">
+                                    <i class="fa fa-calendar text-yellow-600 text-xl"></i>
+                                </div>
+                                <span class="text-sm text-gray-700">排班管理</span>
+                            </a>
+
+                            <a href="#" class="flex flex-col items-center justify-center p-4 border border-gray-100 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors">
+                                <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-2">
+                                    <i class="fa fa-phone text-red-600 text-xl"></i>
+                                </div>
+                                <span class="text-sm text-gray-700">应急通讯</span>
+                            </a>
+
+                            <a href="#" class="flex flex-col items-center justify-center p-4 border border-gray-100 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors">
+                                <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-2">
+                                    <i class="fa fa-cog text-gray-600 text-xl"></i>
+                                </div>
+                                <span class="text-sm text-gray-700">更多功能</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 通知公告和快速链接 -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- 通知公告 -->
+                    <div class="bg-white rounded-xl p-6 lg:col-span-2 card-shadow">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-gray-800">通知公告</h3>
+                            <a href="{{url_for ('manage_notices')}}" class="text-primary text-sm hover:underline">查看全部</a>
+                        </div>
+
+                        <div class="space-y-4" id="noticesContainer">
+                            <!-- 通知内容将通过JS动态加载 -->
+                            <div class="flex justify-center py-8">
+                                <i class="fa fa-spinner fa-spin text-primary text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 常用系统链接 -->
+                    <div class="bg-white rounded-xl p-6 card-shadow">
+                        <h3 class="font-bold text-gray-800 mb-6">常用系统</h3>
+
+                        <div class="space-y-3">
+                            <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                                <div class="w-10 h-10 rounded bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                    <i class="fa fa-database text-primary"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-800 text-sm font-medium">警务信息综合平台</p>
+                                    <p class="text-gray-500 text-xs">人口、车辆信息查询</p>
+                                </div>
+                            </a>
+
+                            <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                                <div class="w-10 h-10 rounded bg-green-100 flex items-center justify-center flex-shrink-0">
+                                    <i class="fa fa-folder-open text-green-600"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-800 text-sm font-medium">案件管理系统</p>
+                                    <p class="text-gray-500 text-xs">案件录入、审批、查询</p>
+                                </div>
+                            </a>
+
+                            <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                                <div class="w-10 h-10 rounded bg-purple-100 flex items-center justify-center flex-shrink-0">
+                                    <i class="fa fa-id-card text-purple-600"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-800 text-sm font-medium">人员管理系统</p>
+                                    <p class="text-gray-500 text-xs">民警信息、考勤管理</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <footer class="bg-white border-t border-gray-200 py-4 px-6">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-gray-500 text-sm">© 2023 公安内网综合信息系统 版权所有</p>
+                    <div class="flex gap-4 mt-2 md:mt-0">
+                        <a href="#" class="text-gray-500 text-sm hover:text-primary">使用帮助</a>
+                        <a href="#" class="text-gray-500 text-sm hover:text-primary">系统公告</a>
+                        <a href="#" class="text-gray-500 text-sm hover:text-primary">联系技术支持</a>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后获取动态数据
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. 获取用户信息
+            loadUserInfo();
+
+            // 2. 获取今日统计数据
+            loadTodayStats();
+
+            // 3. 获取警情趋势图表数据
+            loadIncidentChart();
+
+            // 4. 获取通知公告
+            loadNotices();
+
+            // 5. 侧边栏切换（移动端）
+            document.getElementById('menuToggle').addEventListener('click', function() {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.toggle('hidden');
+                sidebar.classList.toggle('absolute');
+                sidebar.classList.toggle('z-50');
+                sidebar.classList.toggle('h-full');
+            });
+        });
+
+        // 加载用户信息
+        function loadUserInfo() {
+            // 从后端模板变量获取用户信息（Flask传递的current_user）
+            const userName = "{{ user.name }}";
+            const userDepartment = "{{ user.department }}";
+
+            document.getElementById('userName').textContent = userName + " 警官";
+            document.getElementById('userDepartment').textContent = userDepartment;
+        }
+
+        // 加载今日统计数据
+        function loadTodayStats() {
+            fetch('/api/today-stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('todayIncidents').textContent = data.today_incidents;
+                    document.getElementById('handlingCases').textContent = data.handling_cases;
+                    document.getElementById('onDuty').textContent = data.on_duty;
+                    document.getElementById('pendingTasks').textContent = data.pending_tasks;
+
+                    // 设置通知数量（模拟）
+                    const noticeCount = 3;
+                    document.getElementById('notificationCount').textContent = noticeCount;
+                    document.getElementById('headerNotificationCount').textContent = noticeCount;
+                })
+                .catch(error => console.error('获取统计数据失败:', error));
+        }
+
+        // 加载警情趋势图表
+        function loadIncidentChart() {
+            fetch('/api/incident-stats')
+                .then(response => response.json())
+                .then(data => {
+                    const ctx = document.getElementById('incidentChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.dates,
+                            datasets: [
+                                {
+                                    label: '刑事警情',
+                                    data: data.criminal,
+                                    borderColor: '#0A3D62',
+                                    backgroundColor: 'rgba(10, 61, 98, 0.1)',
+                                    tension: 0.4,
+                                    fill: true
+                                },
+                                {
+                                    label: '治安警情',
+                                    data: data.public_security,
+                                    borderColor: '#C0392B',
+                                    backgroundColor: 'rgba(192, 57, 43, 0.1)',
+                                    tension: 0.4,
+                                    fill: true
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'top' }
+                            },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error('获取图表数据失败:', error));
+        }
+
+        // 加载通知公告
+        function loadNotices() {
+            fetch('/api/notices')
+                .then(response => response.json())
+                .then(notices => {
+                    const container = document.getElementById('noticesContainer');
+                    container.innerHTML = '';  // 清空加载动画
+
+                    notices.forEach(notice => {
+                        const noticeElement = document.createElement('div');
+                        noticeElement.className = 'flex gap-4 pb-4 border-b border-gray-100 last:border-0 last:pb-0';
+
+                        // 紧急通知用红色左侧边，普通用蓝色
+                        const borderColor = notice.is_urgent ? 'bg-accent' : 'bg-primary';
+
+                        noticeElement.innerHTML = `
+                            <div class="flex-shrink-0 w-1 ${borderColor} rounded-full"></div>
+                            <div>
+                                <h4 class="font-medium text-gray-800">${notice.title}</h4>
+                                <p class="text-gray-500 text-sm mt-1">${notice.content}</p>
+                                <p class="text-gray-400 text-xs mt-2">发布时间：${notice.create_time} | 发布部门：${notice.department}</p>
+                            </div>
+                        `;
+
+                        container.appendChild(noticeElement);
+                    });
+                })
+                .catch(error => console.error('获取通知失败:', error));
+        }
+    </script>
+</body>
+</html>

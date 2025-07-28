@@ -1,0 +1,55 @@
+{% extends 'index.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>消息详情</h2>
+        <div>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                <i class="fa fa-trash"></i> 删除
+            </button>
+            <a href="{{ url_for('message_inbox') }}" class="btn btn-secondary ms-2">返回列表</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-light">
+            <div class="d-flex justify-content-between">
+                <h5 class="card-title mb-0">{{ message.title }}</h5>
+                <small>{{ message.create_time.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+        </div>
+        <div class="card-body">
+            <p class="card-text">{{ message.content }}</p>
+        </div>
+        <div class="card-footer bg-light text-muted">
+            {% if message.receiver_id == current_user.id %}
+            来自: {{ message.sender.name }} ({{ message.sender.department }})
+            {% else %}
+            发送给: {{ message.receiver.name }} ({{ message.receiver.department }})
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除这条消息吗？此操作不可恢复。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form method="POST" action="{{ url_for('delete_message', message_id=message.id) }}">
+                    <button type="submit" class="btn btn-danger">删除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
